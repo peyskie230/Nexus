@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, MessageSquare, User, Settings, LogOut, Zap, Menu, X, Circle } from 'lucide-react'
+import { Home, MessageSquare, User, Settings, LogOut, Zap, Menu, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { Profile } from '@/lib/types'
 import { UserAvatar } from './UserAvatar'
@@ -23,106 +23,11 @@ const navItems = [
 
 export function AppLayout({ profile, children }: AppLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [onlineUsers, setOnlineUsers] = useState<Profile[]>([])
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
 
-  useEffect(() => {
-    const setStatus = async (online: boolean) => {
-      try {
-        await supabase.from('user_presence').upsert({
-          id: profile.id,
-          is_online: online,
-          last_seen: new Date().toISOString()
-        })
-      } catch (e) {
-        console.log('presence error', e)
-      }
-    }
-
-    setStatus(true)
-    const interval = setInterval(() => setStatus(true), 30000)
-
-    const goOffline = () => setStatus(false)
-    const goOnline = () => setStatus(true)
-
-    window.addEventListener('beforeunload', goOffline)
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'hidden') {
-        goOffline()
-      } else {
-        goOnline()
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibility)
-
-    return () => {
-      clearInterval(interval)
-      window.removeEventListener('beforeunload', goOffline)
-      document.removeEventListener('visibilitychange', handleVisibility)
-      goOffline()
-    }
-  }, [profile.id])
-
-  useEffect(() => {
-    let mounted = true
-
-    async function fetchOnline() {
-      try {
-        const { data: presence } = await supabase
-          .from('user_presence')
-          .select('id')
-          .eq('is_online', true)
-          .neq('id', profile.id)
-
-        if (!mounted) return
-        if (!presence || presence.length === 0) {
-          setOnlineUsers([])
-          return
-        }
-
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('*')
-          .in('id', presence.map((p: any) => p.id))
-
-        if (mounted) setOnlineUsers(profiles || [])
-      } catch (e) {
-        if (mounted) setOnlineUsers([])
-      }
-    }
-
-    fetchOnline()
-
-    const channel = supabase
-      .channel('presence-channel')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'user_presence'
-      }, () => {
-        fetchOnline()
-      })
-      .subscribe()
-
-    return () => {
-      mounted = false
-      supabase.removeChannel(channel)
-    }
-  }, [profile.id])
-
   async function handleLogout() {
-    try {
-      await supabase.from('user_presence').upsert({
-        id: profile.id,
-        is_online: false,
-        last_seen: new Date().toISOString()
-      })
-    } catch (e) {
-      console.log('logout presence error', e)
-    }
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
@@ -145,55 +50,24 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
           </Link>
         </div>
 
-        <nav className="p-4 space-y-1">
-          {navItems.map(function(item) {
-            var isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-            var Icon = item.icon
+        <nav className="flex-1 p-4 space-y-1">
+          {navItems.map(({ href, icon: Icon, label }) => {
+            const isActive = pathname === href || pathname.startsWith(href + '/')
             return (
-              <Link key={item.href} href={item.href} className={cn(
+              <Link key={href} href={href} className={cn(
                 'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all',
                 isActive ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
               )}>
                 <Icon className="w-5 h-5 flex-shrink-0" />
-                {item.label}
+                {label}
               </Link>
             )
           })}
         </nav>
 
-        <div className="flex-1 overflow-y-auto border-t border-slate-800 pt-2">
-          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider px-6 py-2">Online Now</p>
-          <div className="space-y-1 px-2">
-            {onlineUsers.length === 0 ? (
-              <p className="text-slate-500 text-xs px-2 py-1">No one else online</p>
-            ) : (
-              onlineUsers.map(function(user) {
-                return (
-                  <Link
-                    key={user.id}
-                    href={'/dm/' + user.id}
-                    className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-800 transition-all group"
-                  >
-                    <div className="relative flex-shrink-0">
-                      <UserAvatar displayName={user.display_name} avatarColor={user.avatar_color} size="sm" />
-                      <Circle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-green-400 fill-green-400" />
-                    </div>
-                    <span className="text-slate-400 text-sm truncate group-hover:text-white">
-                      {user.display_name}
-                    </span>
-                  </Link>
-                )
-              })
-            )}
-          </div>
-        </div>
-
         <div className="p-4 border-t border-slate-800">
           <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-slate-800 transition-colors mb-1">
-            <div className="relative flex-shrink-0">
-              <UserAvatar displayName={profile.display_name} avatarColor={profile.avatar_color} size="sm" />
-              <Circle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-green-400 fill-green-400" />
-            </div>
+            <UserAvatar displayName={profile.display_name} avatarColor={profile.avatar_color} size="sm" />
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-medium truncate">{profile.display_name}</p>
               <p className="text-green-400 text-xs">Online</p>
@@ -215,7 +89,7 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
           <span className="text-white font-bold">Nexus</span>
         </Link>
         <button
-          onClick={function() { setMobileMenuOpen(function(prev) { return !prev }) }}
+          onClick={() => setMobileMenuOpen(prev => !prev)}
           className="text-slate-400 hover:text-white transition-colors p-1"
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -223,68 +97,36 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
       </div>
 
       {/* MOBILE MENU */}
-      {mobileMenuOpen ? (
+      {mobileMenuOpen && (
         <div className="md:hidden fixed top-14 left-0 right-0 bottom-0 z-40 bg-slate-900 overflow-y-auto">
-          <div className="px-4 py-4">
-            <div className="flex items-center gap-3 px-4 py-3 mb-3 border-b border-slate-800 pb-4">
-              <div className="relative">
-                <UserAvatar displayName={profile.display_name} avatarColor={profile.avatar_color} size="md" />
-                <Circle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-green-400 fill-green-400" />
-              </div>
+          <div className="px-4 py-4 space-y-1">
+            <div className="flex items-center gap-3 px-4 py-3 mb-2 border-b border-slate-800 pb-4">
+              <UserAvatar displayName={profile.display_name} avatarColor={profile.avatar_color} size="md" />
               <div>
                 <p className="text-white font-semibold">{profile.display_name}</p>
                 <p className="text-green-400 text-xs">Online</p>
               </div>
             </div>
 
-            {navItems.map(function(item) {
-              var isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-              var Icon = item.icon
+            {navItems.map(({ href, icon: Icon, label }) => {
+              const isActive = pathname === href || pathname.startsWith(href + '/')
               return (
                 <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={function() { setMobileMenuOpen(false) }}
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileMenuOpen(false)}
                   className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all mb-1',
+                    'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all',
                     isActive ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                   )}
                 >
                   <Icon className="w-5 h-5" />
-                  {item.label}
+                  {label}
                 </Link>
               )
             })}
 
-            <div className="mt-3 pt-3 border-t border-slate-800">
-              <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider px-2 mb-2">Online Now</p>
-              <div className="space-y-1 px-2">
-                {onlineUsers.length === 0 ? (
-                  <p className="text-slate-500 text-xs px-2 py-1">No one else online</p>
-                ) : (
-                  onlineUsers.map(function(user) {
-                    return (
-                      <Link
-                        key={user.id}
-                        href={'/dm/' + user.id}
-                        onClick={function() { setMobileMenuOpen(false) }}
-                        className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-800 transition-all"
-                      >
-                        <div className="relative flex-shrink-0">
-                          <UserAvatar displayName={user.display_name} avatarColor={user.avatar_color} size="sm" />
-                          <Circle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-green-400 fill-green-400" />
-                        </div>
-                        <span className="text-slate-400 text-sm truncate">
-                          {user.display_name}
-                        </span>
-                      </Link>
-                    )
-                  })
-                )}
-              </div>
-            </div>
-
-            <div className="mt-3 pt-3 border-t border-slate-800">
+            <div className="pt-4 border-t border-slate-800 mt-2">
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all"
@@ -295,7 +137,7 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
             </div>
           </div>
         </div>
-      ) : null}
+      )}
 
       {/* MAIN CONTENT */}
       <main className="md:ml-64 pt-16 md:pt-0 min-h-screen">
