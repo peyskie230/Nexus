@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Home, MessageSquare, User, Settings, LogOut, Zap, Menu, X, Circle } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import { Profile, UserPresence } from '@/lib/types'
+import { Profile } from '@/lib/types'
 import { UserAvatar } from './UserAvatar'
 import { PresenceProvider } from './PresenceProvider'
 import { cn } from '@/lib/utils'
@@ -23,42 +23,58 @@ const navItems = [
 ]
 
 function OnlineUsers({ currentUserId }: { currentUserId: string }) {
-  const [onlineUsers, setOnlineUsers] = useState<(Profile & { presence?: UserPresence })[]>([])
+  const [onlineUsers, setOnlineUsers] = useState<Profile[]>([])
   const supabase = createClient()
 
   useEffect(() => {
     async function fetchOnlineUsers() {
-      const { data } = await supabase
-        .from('user_presence')
-        .select('*, profiles(*)')
-        .eq('is_online', true)
-        .neq('id', currentUserId)
+      try {
+        const { data: presenceData } = await supabase
+          .from('user_presence')
+          .select('id')
+          .eq('is_online', true)
+          .neq('id', currentUserId)
 
-      if (data) {
-        const users = data
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .map((p: any) => ({ ...p.profiles, presence: { id: p.id, is_online: p.is_online, last_seen: p.last_seen } }))
-          .filter(Boolean)
-        setOnlineUsers(users)
+        if (!presenceData || presenceData.length === 0) {
+          setOnlineUsers([])
+          return
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const ids = presenceData.map((p: any) => p.id)
+
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('id', ids)
+
+        setOnlineUsers(profileData || [])
+      } catch {
+        setOnlineUsers([])
       }
     }
 
     fetchOnlineUsers()
 
     const channel = supabase
-      .channel('online-users')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_presence' }, fetchOnlineUsers)
+      .channel(`online-users-${currentUserId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'user_presence'
+      }, fetchOnlineUsers)
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUserId])
 
-  if (onlineUsers.length === 0) return (
-    <div className="px-4 py-3">
-      <p className="text-slate-600 text-xs">No one else online</p>
-    </div>
-  )
+  if (onlineUsers.length === 0) {
+    return (
+      <div className="px-4 py-2">
+        <p className="text-slate-600 text-xs">No one else online</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-1 px-2">
@@ -69,7 +85,11 @@ function OnlineUsers({ currentUserId }: { currentUserId: string }) {
           className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-800 transition-all group"
         >
           <div className="relative flex-shrink-0">
-            <UserAvatar displayName={user.display_name} avatarColor={user.avatar_color} size="sm" />
+            <UserAvatar
+              displayName={user.display_name}
+              avatarColor={user.avatar_color}
+              size="sm"
+            />
             <Circle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-green-400 fill-green-400" />
           </div>
           <span className="text-slate-400 text-sm truncate group-hover:text-white transition-colors">
