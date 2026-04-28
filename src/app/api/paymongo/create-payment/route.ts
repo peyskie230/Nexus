@@ -12,31 +12,45 @@ export async function POST(request: NextRequest) {
 
     const { packId, packName, amount } = await request.json()
 
-    // Create PayMongo payment link
+    const secretKey = process.env.PAYMONGO_SECRET_KEY
+    if (!secretKey) {
+      return NextResponse.json({ error: 'PayMongo key not configured' }, { status: 500 })
+    }
+
+    const encodedKey = Buffer.from(secretKey + ':').toString('base64')
+
+    const paymongoBody = {
+      data: {
+        attributes: {
+          amount: amount,
+          description: `Nexus Sticker Pack — ${packName}`,
+          remarks: `${user.id}|${packId}`
+        }
+      }
+    }
+
+    console.log('PayMongo request:', JSON.stringify(paymongoBody))
+    console.log('Using key prefix:', secretKey.substring(0, 10))
+
     const response = await fetch('https://api.paymongo.com/v1/links', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${Buffer.from(process.env.PAYMONGO_SECRET_KEY + ':').toString('base64')}`
+        'Authorization': `Basic ${encodedKey}`
       },
-      body: JSON.stringify({
-        data: {
-          attributes: {
-            amount: amount,
-            description: `Nexus Sticker Pack — ${packName}`,
-            remarks: `${user.id}|${packId}`
-          }
-        }
-      })
+      body: JSON.stringify(paymongoBody)
     })
 
     const paymongoData = await response.json()
+    console.log('PayMongo response:', JSON.stringify(paymongoData))
 
     if (!response.ok) {
-      return NextResponse.json({ error: 'Payment creation failed' }, { status: 400 })
+      return NextResponse.json({
+        error: paymongoData.errors?.[0]?.detail || 'Payment creation failed',
+        details: paymongoData
+      }, { status: 400 })
     }
 
-    // Save payment record to database
     await supabase.from('payments').insert({
       user_id: user.id,
       pack_id: packId,
@@ -50,8 +64,10 @@ export async function POST(request: NextRequest) {
       paymentId: paymongoData.data.id
     })
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Payment error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Internal server error'
+    }, { status: 500 })
   }
 }
