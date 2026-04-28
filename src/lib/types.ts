@@ -42,3 +42,28 @@ export interface Message {
   created_at: string
   profiles?: Profile
 }
+
+export interface UserPresence {
+  id: string
+  is_online: boolean
+  last_seen: string
+}
+
+export interface Conversation {
+  id: string
+  user1_id: string
+  user2_id: string
+  created_at: string
+  updated_at: string
+  other_user?: Profile
+  last_message?: DirectMessage
+}
+
+export interface DirectMessage {
+  id: string
+  conversation_id: string
+  sender_id: string
+  content: string
+  created_at: string
+  profiles?: Profile
+}
