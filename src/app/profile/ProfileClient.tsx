@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { Pencil, Check, X, Heart, FileText, Camera } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { uploadImage } from '@/lib/upload'
 import { Profile, Post } from '@/lib/types'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 
@@ -88,7 +89,6 @@ export function ProfileClient({ initialProfile, initialPosts, userEmail }: Profi
                 onChange={async (e) => {
                   const file = e.target.files?.[0]
                   if (!file) return
-                  const { uploadImage } = await import('@/lib/upload')
                   try {
                     const url = await uploadImage(file, 'avatars', profile.id)
                     if (url) handleAvatarUpload(url)
