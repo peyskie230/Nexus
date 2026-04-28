@@ -25,6 +25,21 @@ export function ShopClient({ packs, ownedPackIds }: ShopClientProps) {
   const [verifying, setVerifying] = useState<string | null>(null)
 
   async function handleBuy(pack: StickerPack) {
+    // If free, give directly without payment
+    if (pack.price === 0) {
+      try {
+        await fetch('/api/paymongo/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentId: 'free', packId: pack.id })
+        })
+        window.location.reload()
+      } catch {
+        setError('Something went wrong. Please try again.')
+      }
+      return
+    }
+
     setLoadingPackId(pack.id)
     setError('')
 

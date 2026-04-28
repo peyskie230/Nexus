@@ -9,6 +9,7 @@ import { ChatRoom, Message, Profile } from '@/lib/types'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { MessageSkeleton } from '@/components/shared/SkeletonCard'
 import { ImageUpload } from '@/components/shared/ImageUpload'
+import { StickerPicker } from '@/components/shared/StickerPicker'
 
 interface ChatRoomClientProps {
   room: ChatRoom
@@ -72,6 +73,10 @@ export function ChatRoomClient({ room, initialMessages, currentUser }: ChatRoomC
       setImageUrl(null)
     }
     setSending(false)
+  }
+
+  function handleStickerSelect(emoji: string) {
+    setContent(prev => prev + emoji)
   }
 
   return (
@@ -162,15 +167,7 @@ export function ChatRoomClient({ room, initialMessages, currentUser }: ChatRoomC
         )}
         <div className="flex items-center gap-2">
           <UserAvatar displayName={currentUser.display_name} avatarColor={currentUser.avatar_color} avatarUrl={currentUser.avatar_url} size="sm" />
-          {!imageUrl && (
-            <ImageUpload
-              userId={currentUser.id}
-              folder="messages"
-              onUpload={setImageUrl}
-              compact={true}
-            />
-          )}
-          <div className="flex-1 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-all">
+          <div className="flex-1 flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-all">
             <input
               type="text"
               value={content}
@@ -179,6 +176,18 @@ export function ChatRoomClient({ room, initialMessages, currentUser }: ChatRoomC
               placeholder={`Message #${room.name}`}
               className="flex-1 bg-transparent text-slate-900 placeholder-slate-400 focus:outline-none text-sm min-w-0"
             />
+            <StickerPicker
+              userId={currentUser.id}
+              onSelect={handleStickerSelect}
+            />
+            {!imageUrl && (
+              <ImageUpload
+                userId={currentUser.id}
+                folder="messages"
+                onUpload={setImageUrl}
+                compact={true}
+              />
+            )}
             <button
               onClick={handleSend}
               disabled={(!content.trim() && !imageUrl) || sending}
