@@ -44,7 +44,7 @@ export function ImageUpload({
   }
 
   return (
-    <div className={compact ? 'flex-shrink-0' : 'w-full'}>
+    <div className={compact ? 'flex-shrink-0' : ''}>
       <input
         ref={inputRef}
         type="file"

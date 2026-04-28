@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, MessageSquare, User, Settings, LogOut, Zap, Menu, X } from 'lucide-react'
+import { Home, MessageSquare, User, Settings, LogOut, Zap, Menu, X, ShoppingBag } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { Profile } from '@/lib/types'
 import { UserAvatar } from './UserAvatar'
@@ -18,6 +18,7 @@ const navItems = [
   { href: '/feed',     icon: Home,          label: 'Home'     },
   { href: '/chat',     icon: MessageSquare, label: 'Chat'     },
   { href: '/profile',  icon: User,          label: 'Profile'  },
+  { href: '/shop',     icon: ShoppingBag,   label: 'Shop'     },
   { href: '/settings', icon: Settings,      label: 'Settings' },
 ]
 

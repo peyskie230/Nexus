@@ -92,8 +92,8 @@ export function FeedClient({ initialPosts, currentUser }: FeedClientProps) {
               </div>
             )}
 
-            <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mt-3 gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {!imageUrl && (
                   <ImageUpload
                     userId={currentUser.id}
@@ -102,12 +102,12 @@ export function FeedClient({ initialPosts, currentUser }: FeedClientProps) {
                     compact={false}
                   />
                 )}
-                <p className="text-xs text-slate-400">Ctrl+Enter to post</p>
+                <p className="hidden sm:block text-xs text-slate-400">Ctrl+Enter to post</p>
               </div>
               <button
                 onClick={handlePost}
                 disabled={(!content.trim() && !imageUrl) || posting}
-                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-all"
+                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-all flex-shrink-0"
               >
                 <Send className="w-4 h-4" />
                 {posting ? 'Posting...' : 'Post'}
