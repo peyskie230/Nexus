@@ -9,7 +9,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ profile, children }: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Sidebar — only visible on desktop */}
       <div className="hidden md:block">
         <Sidebar profile={profile} />

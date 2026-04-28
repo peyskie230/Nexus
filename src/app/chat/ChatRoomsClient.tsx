@@ -52,8 +52,8 @@ export function ChatRoomsClient({ initialRooms, currentUser }: ChatRoomsClientPr
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Chat Rooms</h1>
-          <p className="text-slate-500 text-sm mt-1">Join a room and start chatting in real-time</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Chat Rooms</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Join a room and start chatting in real-time</p>
         </div>
         <button
           onClick={() => setShowCreate(!showCreate)}
@@ -66,46 +66,46 @@ export function ChatRoomsClient({ initialRooms, currentUser }: ChatRoomsClientPr
 
       {/* Create room form */}
       {showCreate && (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-          <h2 className="font-semibold text-slate-900 mb-4">Create a New Room</h2>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+          <h2 className="font-semibold text-slate-900 dark:text-white mb-4">Create a New Room</h2>
           {error && (
-            <div className="bg-red-50 border border-red-100 rounded-xl p-3 mb-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-xl p-3 mb-4">
               <p className="text-red-500 text-sm">{error}</p>
             </div>
           )}
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700">Room Name</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Room Name</label>
               <input
                 type="text"
                 value={newRoomName}
                 onChange={e => setNewRoomName(e.target.value)}
                 placeholder="e.g. gaming, music, tech"
-                className="w-full mt-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                className="w-full mt-1 px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
               />
-              <p className="text-xs text-slate-400 mt-1">Spaces will be converted to dashes</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Spaces will be converted to dashes</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700">Description (optional)</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Description (optional)</label>
               <input
                 type="text"
                 value={newRoomDesc}
                 onChange={e => setNewRoomDesc(e.target.value)}
                 placeholder="What is this room about?"
-                className="w-full mt-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                className="w-full mt-1 px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
               />
             </div>
             <div className="flex gap-3">
               <button
                 onClick={handleCreateRoom}
                 disabled={!newRoomName.trim() || creating}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-all"
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-all"
               >
                 {creating ? 'Creating...' : 'Create Room'}
               </button>
               <button
                 onClick={() => { setShowCreate(false); setError('') }}
-                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-all"
+                className="px-5 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-xl transition-all"
               >
                 Cancel
               </button>
@@ -117,28 +117,28 @@ export function ChatRoomsClient({ initialRooms, currentUser }: ChatRoomsClientPr
       {/* Rooms grid */}
       {rooms.length === 0 ? (
         <div className="text-center py-16">
-          <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-600 font-medium">No rooms yet</p>
-          <p className="text-slate-400 text-sm mt-1">Create the first chat room!</p>
+          <MessageSquare className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+          <p className="text-slate-600 dark:text-slate-300 font-medium">No rooms yet</p>
+          <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Create the first chat room!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {rooms.map(room => (
             <div
               key={room.id}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-indigo-100 transition-all cursor-pointer group"
+              className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md hover:border-indigo-100 dark:hover:border-indigo-800 transition-all cursor-pointer group"
               onClick={() => router.push(`/chat/${room.id}`)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+                  <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 transition-colors">
                     <Hash className="w-6 h-6 text-indigo-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                       #{room.name}
                     </h3>
-                    <p className="text-slate-500 text-sm mt-0.5">
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
                       {room.description || 'No description'}
                     </p>
                   </div>

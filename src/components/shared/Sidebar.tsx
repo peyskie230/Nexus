@@ -1,7 +1,3 @@
-// src/components/shared/Sidebar.tsx
-// The dark left sidebar shown on all authenticated pages.
-// Contains the logo, navigation links, and user info at the bottom.
-
 'use client'
 
 import Link from 'next/link'
@@ -10,6 +6,7 @@ import { Home, MessageSquare, User, Settings, LogOut, Zap } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { Profile } from '@/lib/types'
 import { UserAvatar } from './UserAvatar'
+import { ThemeToggle } from './ThemeToggle'
 import { cn } from '@/lib/utils'
 
 interface SidebarProps {
@@ -35,7 +32,7 @@ export function Sidebar({ profile }: SidebarProps) {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-slate-900 flex flex-col z-40 border-r border-slate-800">
+    <aside className="fixed left-0 top-0 h-full w-64 bg-slate-900 hidden md:flex flex-col z-40 border-r border-slate-800">
 
       {/* Logo */}
       <div className="p-6 border-b border-slate-800">
@@ -71,6 +68,14 @@ export function Sidebar({ profile }: SidebarProps) {
           )
         })}
       </nav>
+
+      {/* Theme toggle */}
+      <div className="px-4 pb-2">
+        <ThemeToggle
+          showLabel
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
+        />
+      </div>
 
       {/* User info + logout at the bottom */}
       <div className="p-4 border-t border-slate-800">
