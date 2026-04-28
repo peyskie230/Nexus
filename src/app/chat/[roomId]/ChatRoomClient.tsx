@@ -24,12 +24,10 @@ export function ChatRoomClient({ room, initialMessages, currentUser }: ChatRoomC
   const router = useRouter()
   const supabase = createClient()
 
-  // Scroll to bottom whenever messages change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Subscribe to real-time messages
   useEffect(() => {
     const channel = supabase
       .channel(`room:${room.id}`)
@@ -42,7 +40,6 @@ export function ChatRoomClient({ room, initialMessages, currentUser }: ChatRoomC
           filter: `room_id=eq.${room.id}`
         },
         async (payload) => {
-          // Fetch the full message with profile info
           const { data } = await supabase
             .from('messages')
             .select('*, profiles(*)')
@@ -51,7 +48,6 @@ export function ChatRoomClient({ room, initialMessages, currentUser }: ChatRoomC
 
           if (data) {
             setMessages(prev => {
-              // Avoid duplicates
               if (prev.find(m => m.id === data.id)) return prev
               return [...prev, data]
             })
@@ -82,27 +78,27 @@ export function ChatRoomClient({ room, initialMessages, currentUser }: ChatRoomC
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] -my-8">
+    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-4rem)] -mx-4 md:mx-0 -my-6 md:-my-8">
 
       {/* Room header */}
-      <div className="flex items-center gap-4 px-6 py-4 bg-white border-b border-slate-100 rounded-t-2xl shadow-sm flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-slate-100 shadow-sm flex-shrink-0">
         <button
           onClick={() => router.push('/chat')}
           className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-          <Hash className="w-5 h-5 text-indigo-600" />
+        <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center">
+          <Hash className="w-4 h-4 text-indigo-600" />
         </div>
-        <div>
-          <h1 className="font-bold text-slate-900">#{room.name}</h1>
-          <p className="text-slate-500 text-xs">{room.description || 'No description'}</p>
+        <div className="min-w-0">
+          <h1 className="font-bold text-slate-900 text-sm truncate">#{room.name}</h1>
+          <p className="text-slate-500 text-xs truncate">{room.description || 'No description'}</p>
         </div>
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto bg-white px-6 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto bg-white px-4 py-4 space-y-4">
         {loading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => <MessageSkeleton key={i} />)}
@@ -129,7 +125,7 @@ export function ChatRoomClient({ room, initialMessages, currentUser }: ChatRoomC
                 )}
                 <div className="flex-1 min-w-0">
                   {showAvatar && (
-                    <div className="flex items-baseline gap-2 mb-1">
+                    <div className="flex items-baseline gap-2 mb-1 flex-wrap">
                       <span className="font-semibold text-slate-900 text-sm">
                         {message.profiles?.display_name || 'User'}
                       </span>
@@ -150,21 +146,21 @@ export function ChatRoomClient({ room, initialMessages, currentUser }: ChatRoomC
       </div>
 
       {/* Message input */}
-      <div className="px-6 py-4 bg-white border-t border-slate-100 rounded-b-2xl flex-shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="px-4 py-3 bg-white border-t border-slate-100 flex-shrink-0">
+        <div className="flex items-center gap-2">
           <UserAvatar
             displayName={currentUser.display_name}
             avatarColor={currentUser.avatar_color}
             size="sm"
           />
-          <div className="flex-1 flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-all">
+          <div className="flex-1 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-all">
             <input
               type="text"
               value={content}
               onChange={e => setContent(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
               placeholder={`Message #${room.name}`}
-              className="flex-1 bg-transparent text-slate-900 placeholder-slate-400 focus:outline-none text-sm"
+              className="flex-1 bg-transparent text-slate-900 placeholder-slate-400 focus:outline-none text-sm min-w-0"
             />
             <button
               onClick={handleSend}
