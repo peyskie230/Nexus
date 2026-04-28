@@ -5,6 +5,7 @@ export interface Profile {
   id: string
   display_name: string
   avatar_color: string
+  avatar_url?: string | null
   created_at: string
   updated_at: string
 }
@@ -13,6 +14,7 @@ export interface Post {
   id: string
   user_id: string
   content: string
+  image_url?: string | null
   likes_count: number
   created_at: string
   profiles?: Profile
@@ -39,6 +41,7 @@ export interface Message {
   room_id: string
   user_id: string
   content: string
+  image_url?: string | null
   created_at: string
   profiles?: Profile
 }

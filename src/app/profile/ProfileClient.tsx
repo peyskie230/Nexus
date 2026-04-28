@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import { Pencil, Check, X, Heart, FileText } from 'lucide-react'
+import { Pencil, Check, X, Heart, FileText, Camera } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { Profile, Post } from '@/lib/types'
 import { UserAvatar } from '@/components/shared/UserAvatar'
@@ -27,17 +27,12 @@ export function ProfileClient({ initialProfile, initialPosts, userEmail }: Profi
     if (!newDisplayName.trim() || saving) return
     setSaving(true)
     setError('')
-
     const { data, error } = await supabase
       .from('profiles')
-      .update({
-        display_name: newDisplayName.trim(),
-        updated_at: new Date().toISOString()
-      })
+      .update({ display_name: newDisplayName.trim(), updated_at: new Date().toISOString() })
       .eq('id', profile.id)
       .select()
       .single()
-
     if (error) {
       setError(error.message)
       setSaving(false)
@@ -50,10 +45,14 @@ export function ProfileClient({ initialProfile, initialPosts, userEmail }: Profi
     }
   }
 
-  function handleCancel() {
-    setNewDisplayName(profile.display_name)
-    setEditing(false)
-    setError('')
+  async function handleAvatarUpload(url: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ avatar_url: url, updated_at: new Date().toISOString() })
+      .eq('id', profile.id)
+      .select()
+      .single()
+    if (!error && data) setProfile(data)
   }
 
   const totalLikes = posts.reduce((sum, post) => sum + post.likes_count, 0)
@@ -61,51 +60,70 @@ export function ProfileClient({ initialProfile, initialPosts, userEmail }: Profi
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Profile</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage your account and see your posts</p>
+        <h1 className="text-2xl font-bold text-slate-900">Profile</h1>
+        <p className="text-slate-500 text-sm mt-1">Manage your account and see your posts</p>
       </div>
 
       {/* Profile card */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-sm border border-slate-100 dark:border-slate-700">
+      <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
         <div className="flex items-start gap-6">
-          <UserAvatar
-            displayName={profile.display_name}
-            avatarColor={profile.avatar_color}
-            size="lg"
-          />
+
+          {/* Avatar with upload */}
+          <div className="relative flex-shrink-0">
+            {profile.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt={profile.display_name}
+                className="w-16 h-16 rounded-full object-cover border-2 border-slate-100"
+              />
+            ) : (
+              <UserAvatar displayName={profile.display_name} avatarColor={profile.avatar_color} size="lg" />
+            )}
+            <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-indigo-600 hover:bg-indigo-500 rounded-full flex items-center justify-center cursor-pointer transition-colors shadow-md">
+              <Camera className="w-3.5 h-3.5 text-white" />
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  const { uploadImage } = await import('@/lib/upload')
+                  try {
+                    const url = await uploadImage(file, 'avatars', profile.id)
+                    if (url) handleAvatarUpload(url)
+                  } catch (err: unknown) {
+                    setError(err instanceof Error ? err.message : 'Upload failed')
+                  }
+                }}
+              />
+            </label>
+          </div>
+
           <div className="flex-1 min-w-0">
             {editing ? (
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                    Display Name
-                  </label>
+                  <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Display Name</label>
                   <input
                     type="text"
                     value={newDisplayName}
                     onChange={e => setNewDisplayName(e.target.value)}
                     onKeyDown={e => {
                       if (e.key === 'Enter') handleSave()
-                      if (e.key === 'Escape') handleCancel()
+                      if (e.key === 'Escape') { setEditing(false); setNewDisplayName(profile.display_name) }
                     }}
                     autoFocus
-                    className="w-full mt-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                    className="w-full mt-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
                   />
                 </div>
                 {error && <p className="text-red-500 text-sm">{error}</p>}
                 <div className="flex gap-2">
-                  <button
-                    onClick={handleSave}
-                    disabled={!newDisplayName.trim() || saving}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-all"
-                  >
+                  <button onClick={handleSave} disabled={!newDisplayName.trim() || saving} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-all">
                     <Check className="w-4 h-4" />
                     {saving ? 'Saving...' : 'Save'}
                   </button>
-                  <button
-                    onClick={handleCancel}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-xl transition-all"
-                  >
+                  <button onClick={() => { setEditing(false); setNewDisplayName(profile.display_name) }} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-all">
                     <X className="w-4 h-4" />
                     Cancel
                   </button>
@@ -114,84 +132,76 @@ export function ProfileClient({ initialProfile, initialPosts, userEmail }: Profi
             ) : (
               <div>
                 <div className="flex items-center gap-3">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">{profile.display_name}</h2>
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                  >
+                  <h2 className="text-xl font-bold text-slate-900">{profile.display_name}</h2>
+                  <button onClick={() => setEditing(true)} className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-600">
                     <Pencil className="w-4 h-4" />
                   </button>
                 </div>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{userEmail}</p>
-                {success && (
-                  <p className="text-green-500 text-sm mt-2 flex items-center gap-1">
-                    <Check className="w-3 h-3" />
-                    Display name updated!
-                  </p>
-                )}
+                <p className="text-slate-500 text-sm mt-1">{userEmail}</p>
+                {success && <p className="text-green-500 text-sm mt-2 flex items-center gap-1"><Check className="w-3 h-3" />Display name updated!</p>}
               </div>
             )}
 
             {/* Stats */}
-            <div className="flex items-center gap-6 mt-5 pt-5 border-t border-slate-100 dark:border-slate-700">
+            <div className="flex items-center gap-6 mt-5 pt-5 border-t border-slate-100">
               <div className="text-center">
-                <div className="flex items-center gap-1.5 text-slate-900 dark:text-white">
+                <div className="flex items-center gap-1.5 text-slate-900">
                   <FileText className="w-4 h-4 text-indigo-500" />
                   <span className="text-xl font-bold">{posts.length}</span>
                 </div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Posts</p>
+                <p className="text-slate-500 text-xs mt-0.5">Posts</p>
               </div>
-              <div className="w-px h-10 bg-slate-100 dark:bg-slate-700" />
+              <div className="w-px h-10 bg-slate-100" />
               <div className="text-center">
-                <div className="flex items-center gap-1.5 text-slate-900 dark:text-white">
+                <div className="flex items-center gap-1.5 text-slate-900">
                   <Heart className="w-4 h-4 text-red-400" />
                   <span className="text-xl font-bold">{totalLikes}</span>
                 </div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Total Likes</p>
+                <p className="text-slate-500 text-xs mt-0.5">Total Likes</p>
               </div>
-              <div className="w-px h-10 bg-slate-100 dark:bg-slate-700" />
+              <div className="w-px h-10 bg-slate-100" />
               <div className="text-center">
-                <p className="text-slate-900 dark:text-white text-sm font-semibold">
+                <p className="text-slate-900 text-sm font-semibold">
                   {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                 </p>
-                <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Joined</p>
+                <p className="text-slate-500 text-xs mt-0.5">Joined</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* User's posts */}
+      {/* Posts */}
       <div>
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Your Posts</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-4">Your Posts</h2>
         {posts.length === 0 ? (
-          <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
-            <FileText className="w-12 h-12 text-slate-200 dark:text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-600 dark:text-slate-300 font-medium">No posts yet</p>
-            <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Share something on the home feed!</p>
+          <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
+            <FileText className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-600 font-medium">No posts yet</p>
+            <p className="text-slate-400 text-sm mt-1">Share something on the home feed!</p>
           </div>
         ) : (
           <div className="space-y-4">
             {posts.map(post => (
-              <div key={post.id} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+              <div key={post.id} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
                 <div className="flex items-start gap-4">
-                  <UserAvatar
-                    displayName={profile.display_name}
-                    avatarColor={profile.avatar_color}
-                  />
+                  {profile.avatar_url ? (
+                    <img src={profile.avatar_url} alt={profile.display_name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <UserAvatar displayName={profile.display_name} avatarColor={profile.avatar_color} />
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-slate-900 dark:text-white text-sm">
-                        {profile.display_name}
-                      </span>
-                      <span className="text-slate-400 dark:text-slate-500 text-xs">
-                        {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-                      </span>
+                      <span className="font-semibold text-slate-900 text-sm">{profile.display_name}</span>
+                      <span className="text-slate-400 text-xs">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>
                     </div>
-                    <p className="text-slate-700 dark:text-slate-300 mt-2 text-sm leading-relaxed whitespace-pre-wrap">
-                      {post.content}
-                    </p>
-                    <div className="flex items-center gap-1.5 mt-3 text-slate-400 dark:text-slate-500 text-xs">
+                    {post.content && <p className="text-slate-700 mt-2 text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>}
+                    {post.image_url && (
+                      <div className="mt-3">
+                        <img src={post.image_url} alt="Post image" className="max-h-64 rounded-xl object-cover border border-slate-100" />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1.5 mt-3 text-slate-400 text-xs">
                       <Heart className="w-3.5 h-3.5 text-red-400" />
                       <span>{post.likes_count} {post.likes_count === 1 ? 'like' : 'likes'}</span>
                     </div>
