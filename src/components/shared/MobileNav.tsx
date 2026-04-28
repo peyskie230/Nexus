@@ -4,12 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Home, MessageSquare, User, Settings, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import { Profile } from '@/lib/types'
 import { cn } from '@/lib/utils'
-
-interface MobileNavProps {
-  profile: Profile
-}
 
 const navItems = [
   { href: '/feed',     icon: Home,          label: 'Home'    },
@@ -18,7 +13,7 @@ const navItems = [
   { href: '/settings', icon: Settings,      label: 'Settings'},
 ]
 
-export function MobileNav({ profile }: MobileNavProps) {
+export function MobileNav() {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()

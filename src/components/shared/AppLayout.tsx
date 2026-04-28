@@ -24,7 +24,7 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
 
       {/* Mobile bottom nav — only visible on mobile */}
       <div className="md:hidden">
-        <MobileNav profile={profile} />
+        <MobileNav />
       </div>
     </div>
   )

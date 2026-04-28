@@ -59,6 +59,7 @@ export function ChatRoomClient({ room, initialMessages, currentUser }: ChatRoomC
     return () => {
       supabase.removeChannel(channel)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room.id])
 
   async function handleSend() {
