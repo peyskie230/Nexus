@@ -17,7 +17,7 @@ export function FeedClient({ initialPosts, currentUser }: FeedClientProps) {
   const [posts, setPosts] = useState<Post[]>(initialPosts)
   const [content, setContent] = useState('')
   const [posting, setPosting] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loading] = useState(false)
   const supabase = createClient()
 
   async function handlePost() {

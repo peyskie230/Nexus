@@ -19,7 +19,7 @@ export function ChatRoomClient({ room, initialMessages, currentUser }: ChatRoomC
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [content, setContent] = useState('')
   const [sending, setSending] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const supabase = createClient()
