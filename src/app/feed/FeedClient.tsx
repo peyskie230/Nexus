@@ -66,7 +66,7 @@ export function FeedClient({ initialPosts, currentUser }: FeedClientProps) {
       {/* Create post box */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
         <div className="flex items-start gap-4">
-          <UserAvatar displayName={currentUser.display_name} avatarColor={currentUser.avatar_color} />
+          <UserAvatar displayName={currentUser.display_name} avatarColor={currentUser.avatar_color} avatarUrl={currentUser.avatar_url} />
           <div className="flex-1">
             <textarea
               value={content}
@@ -136,6 +136,7 @@ export function FeedClient({ initialPosts, currentUser }: FeedClientProps) {
                 <UserAvatar
                   displayName={post.profiles?.display_name || 'User'}
                   avatarColor={post.profiles?.avatar_color || '#4F46E5'}
+                  avatarUrl={post.profiles?.avatar_url}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">

@@ -67,7 +67,7 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
 
         <div className="p-4 border-t border-slate-800">
           <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-slate-800 transition-colors mb-1">
-            <UserAvatar displayName={profile.display_name} avatarColor={profile.avatar_color} size="sm" />
+            <UserAvatar displayName={profile.display_name} avatarColor={profile.avatar_color} avatarUrl={profile.avatar_url} size="sm" />
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-medium truncate">{profile.display_name}</p>
               <p className="text-green-400 text-xs">Online</p>
@@ -101,7 +101,7 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
         <div className="md:hidden fixed top-14 left-0 right-0 bottom-0 z-40 bg-slate-900 overflow-y-auto">
           <div className="px-4 py-4 space-y-1">
             <div className="flex items-center gap-3 px-4 py-3 mb-2 border-b border-slate-800 pb-4">
-              <UserAvatar displayName={profile.display_name} avatarColor={profile.avatar_color} size="md" />
+              <UserAvatar displayName={profile.display_name} avatarColor={profile.avatar_color} avatarUrl={profile.avatar_url} size="md" />
               <div>
                 <p className="text-white font-semibold">{profile.display_name}</p>
                 <p className="text-green-400 text-xs">Online</p>

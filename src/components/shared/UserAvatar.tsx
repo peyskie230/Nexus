@@ -1,15 +1,11 @@
-// src/components/shared/UserAvatar.tsx
-// Displays a colored circle with the user's initials.
-// Used everywhere a profile picture would normally appear.
-
 interface UserAvatarProps {
   displayName: string
   avatarColor: string
+  avatarUrl?: string | null
   size?: 'sm' | 'md' | 'lg'
 }
 
-export function UserAvatar({ displayName, avatarColor, size = 'md' }: UserAvatarProps) {
-  // Get initials: "John Doe" → "JD", "Alice" → "A"
+export function UserAvatar({ displayName, avatarColor, avatarUrl, size = 'md' }: UserAvatarProps) {
   const initials = displayName
     .split(' ')
     .map(word => word[0])
@@ -21,6 +17,16 @@ export function UserAvatar({ displayName, avatarColor, size = 'md' }: UserAvatar
     sm: 'w-8 h-8 text-xs',
     md: 'w-10 h-10 text-sm',
     lg: 'w-16 h-16 text-xl',
+  }
+
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={displayName}
+        className={`${sizeClasses[size]} rounded-full object-cover flex-shrink-0`}
+      />
+    )
   }
 
   return (

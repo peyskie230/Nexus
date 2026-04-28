@@ -117,7 +117,7 @@ export function DMClient({ conversation, otherUser, initialMessages, currentUser
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="relative flex-shrink-0">
-          <UserAvatar displayName={otherUser.display_name} avatarColor={otherUser.avatar_color} size="sm" />
+          <UserAvatar displayName={otherUser.display_name} avatarColor={otherUser.avatar_color} avatarUrl={otherUser.avatar_url} size="sm" />
           {isOtherOnline && (
             <Circle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-green-400 fill-green-400" />
           )}
@@ -134,7 +134,7 @@ export function DMClient({ conversation, otherUser, initialMessages, currentUser
       <div className="flex-1 overflow-y-auto bg-white px-4 py-4 space-y-4">
         {messages.length === 0 ? (
           <div className="text-center py-16">
-            <UserAvatar displayName={otherUser.display_name} avatarColor={otherUser.avatar_color} size="lg" />
+            <UserAvatar displayName={otherUser.display_name} avatarColor={otherUser.avatar_color} avatarUrl={otherUser.avatar_url} size="lg" />
             <p className="text-slate-600 font-medium mt-4">Start a conversation with {otherUser.display_name}</p>
             <p className="text-slate-400 text-sm mt-1">Messages are private between you two.</p>
           </div>
@@ -150,6 +150,7 @@ export function DMClient({ conversation, otherUser, initialMessages, currentUser
                   <UserAvatar
                     displayName={isMe ? currentUser.display_name : otherUser.display_name}
                     avatarColor={isMe ? currentUser.avatar_color : otherUser.avatar_color}
+                    avatarUrl={isMe ? currentUser.avatar_url : otherUser.avatar_url}
                     size="sm"
                   />
                 )}
@@ -182,7 +183,7 @@ export function DMClient({ conversation, otherUser, initialMessages, currentUser
       {/* Input */}
       <div className="px-4 py-3 bg-white border-t border-slate-100 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <UserAvatar displayName={currentUser.display_name} avatarColor={currentUser.avatar_color} size="sm" />
+          <UserAvatar displayName={currentUser.display_name} avatarColor={currentUser.avatar_color} avatarUrl={currentUser.avatar_url} size="sm" />
           <div className="flex-1 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-all">
             <input
               type="text"
