@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, parseISO } from 'date-fns'
 import { Heart, Send } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { Post, Profile } from '@/lib/types'
@@ -144,7 +144,7 @@ export function FeedClient({ initialPosts, currentUser }: FeedClientProps) {
                       {post.profiles?.display_name || 'User'}
                     </span>
                     <span className="text-slate-400 text-xs">
-                      {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                      {formatDistanceToNow(parseISO(post.created_at), { addSuffix: true })}
                     </span>
                   </div>
                   {post.content && (

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, parseISO } from 'date-fns'
 import { Pencil, Check, X, Heart, FileText, Camera } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { uploadImage } from '@/lib/upload'
@@ -162,7 +162,7 @@ export function ProfileClient({ initialProfile, initialPosts, userEmail }: Profi
               <div className="w-px h-10 bg-slate-100" />
               <div className="text-center">
                 <p className="text-slate-900 text-sm font-semibold">
-                  {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                  {parseISO(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                 </p>
                 <p className="text-slate-500 text-xs mt-0.5">Joined</p>
               </div>
@@ -193,7 +193,7 @@ export function ProfileClient({ initialProfile, initialPosts, userEmail }: Profi
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-slate-900 text-sm">{profile.display_name}</span>
-                      <span className="text-slate-400 text-xs">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>
+                      <span className="text-slate-400 text-xs">{formatDistanceToNow(parseISO(post.created_at), { addSuffix: true })}</span>
                     </div>
                     {post.content && <p className="text-slate-700 mt-2 text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>}
                     {post.image_url && (

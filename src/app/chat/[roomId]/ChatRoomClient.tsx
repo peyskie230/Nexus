@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, parseISO } from 'date-fns'
 import { ArrowLeft, Send, Hash } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { ChatRoom, Message, Profile } from '@/lib/types'
@@ -122,7 +122,7 @@ export function ChatRoomClient({ room, initialMessages, currentUser }: ChatRoomC
                         {message.profiles?.display_name || 'User'}
                       </span>
                       <span className="text-slate-400 text-xs">
-                        {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                        {formatDistanceToNow(parseISO(message.created_at), { addSuffix: true })}
                       </span>
                     </div>
                   )}
