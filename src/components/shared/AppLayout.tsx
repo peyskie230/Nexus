@@ -28,7 +28,6 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
   const router = useRouter()
   const supabase = createClient()
 
-  // Set user online/offline
   useEffect(() => {
     const setStatus = async (online: boolean) => {
       try {
@@ -37,28 +36,36 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
           is_online: online,
           last_seen: new Date().toISOString()
         })
-      } catch {}
+      } catch (e) {
+        console.log('presence error', e)
+      }
     }
 
     setStatus(true)
     const interval = setInterval(() => setStatus(true), 30000)
 
-    const handleHide = () => setStatus(false)
-    const handleShow = () => setStatus(true)
-    window.addEventListener('beforeunload', handleHide)
-    document.addEventListener('visibilitychange', () => {
-      document.visibilityState === 'hidden' ? handleHide() : handleShow()
-    })
+    const goOffline = () => setStatus(false)
+    const goOnline = () => setStatus(true)
+
+    window.addEventListener('beforeunload', goOffline)
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        goOffline()
+      } else {
+        goOnline()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
       clearInterval(interval)
-      window.removeEventListener('beforeunload', handleHide)
-      setStatus(false)
+      window.removeEventListener('beforeunload', goOffline)
+      document.removeEventListener('visibilitychange', handleVisibility)
+      goOffline()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile.id])
 
-  // Fetch online users
   useEffect(() => {
     let mounted = true
 
@@ -79,11 +86,10 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
         const { data: profiles } = await supabase
           .from('profiles')
           .select('*')
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .in('id', presence.map((p: any) => p.id))
 
         if (mounted) setOnlineUsers(profiles || [])
-      } catch {
+      } catch (e) {
         if (mounted) setOnlineUsers([])
       }
     }
@@ -91,19 +97,20 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
     fetchOnline()
 
     const channel = supabase
-      .channel(`presence-${profile.id}`)
+      .channel('presence-channel')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'user_presence'
-      }, fetchOnline)
+      }, () => {
+        fetchOnline()
+      })
       .subscribe()
 
     return () => {
       mounted = false
       supabase.removeChannel(channel)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile.id])
 
   async function handleLogout() {
@@ -113,36 +120,13 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
         is_online: false,
         last_seen: new Date().toISOString()
       })
-    } catch {}
+    } catch (e) {
+      console.log('logout presence error', e)
+    }
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
   }
-
-  const OnlineList = () => (
-    <div className="space-y-1 px-2">
-      {onlineUsers.length === 0 ? (
-        <p className="text-slate-500 text-xs px-2 py-1">No one else online</p>
-      ) : (
-        onlineUsers.map(user => (
-          <Link
-            key={user.id}
-            href={`/dm/${user.id}`}
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-800 transition-all group"
-          >
-            <div className="relative flex-shrink-0">
-              <UserAvatar displayName={user.display_name} avatarColor={user.avatar_color} size="sm" />
-              <Circle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-green-400 fill-green-400" />
-            </div>
-            <span className="text-slate-400 text-sm truncate group-hover:text-white">
-              {user.display_name}
-            </span>
-          </Link>
-        ))
-      )}
-    </div>
-  )
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -162,15 +146,16 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
         </div>
 
         <nav className="p-4 space-y-1">
-          {navItems.map(({ href, icon: Icon, label }) => {
-            const isActive = pathname === href || pathname.startsWith(href + '/')
+          {navItems.map(function(item) {
+            var isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            var Icon = item.icon
             return (
-              <Link key={href} href={href} className={cn(
+              <Link key={item.href} href={item.href} className={cn(
                 'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all',
                 isActive ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
               )}>
                 <Icon className="w-5 h-5 flex-shrink-0" />
-                {label}
+                {item.label}
               </Link>
             )
           })}
@@ -178,7 +163,29 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
 
         <div className="flex-1 overflow-y-auto border-t border-slate-800 pt-2">
           <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider px-6 py-2">Online Now</p>
-          <OnlineList />
+          <div className="space-y-1 px-2">
+            {onlineUsers.length === 0 ? (
+              <p className="text-slate-500 text-xs px-2 py-1">No one else online</p>
+            ) : (
+              onlineUsers.map(function(user) {
+                return (
+                  <Link
+                    key={user.id}
+                    href={'/dm/' + user.id}
+                    className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-800 transition-all group"
+                  >
+                    <div className="relative flex-shrink-0">
+                      <UserAvatar displayName={user.display_name} avatarColor={user.avatar_color} size="sm" />
+                      <Circle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-green-400 fill-green-400" />
+                    </div>
+                    <span className="text-slate-400 text-sm truncate group-hover:text-white">
+                      {user.display_name}
+                    </span>
+                  </Link>
+                )
+              })
+            )}
+          </div>
         </div>
 
         <div className="p-4 border-t border-slate-800">
@@ -208,7 +215,7 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
           <span className="text-white font-bold">Nexus</span>
         </Link>
         <button
-          onClick={() => setMobileMenuOpen(prev => !prev)}
+          onClick={function() { setMobileMenuOpen(function(prev) { return !prev }) }}
           className="text-slate-400 hover:text-white transition-colors p-1"
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -216,10 +223,10 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
       </div>
 
       {/* MOBILE MENU */}
-      {mobileMenuOpen && (
+      {mobileMenuOpen ? (
         <div className="md:hidden fixed top-14 left-0 right-0 bottom-0 z-40 bg-slate-900 overflow-y-auto">
-          <div className="px-4 py-4 space-y-1">
-            <div className="flex items-center gap-3 px-4 py-3 mb-2 border-b border-slate-800 pb-4">
+          <div className="px-4 py-4">
+            <div className="flex items-center gap-3 px-4 py-3 mb-3 border-b border-slate-800 pb-4">
               <div className="relative">
                 <UserAvatar displayName={profile.display_name} avatarColor={profile.avatar_color} size="md" />
                 <Circle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-green-400 fill-green-400" />
@@ -230,30 +237,54 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
               </div>
             </div>
 
-            {navItems.map(({ href, icon: Icon, label }) => {
-              const isActive = pathname === href || pathname.startsWith(href + '/')
+            {navItems.map(function(item) {
+              var isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+              var Icon = item.icon
               return (
                 <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setMobileMenuOpen(false)}
+                  key={item.href}
+                  href={item.href}
+                  onClick={function() { setMobileMenuOpen(false) }}
                   className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all',
+                    'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all mb-1',
                     isActive ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                   )}
                 >
                   <Icon className="w-5 h-5" />
-                  {label}
+                  {item.label}
                 </Link>
               )
             })}
 
-            <div className="pt-4 border-t border-slate-800 mt-2">
+            <div className="mt-3 pt-3 border-t border-slate-800">
               <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider px-2 mb-2">Online Now</p>
-              <OnlineList />
+              <div className="space-y-1 px-2">
+                {onlineUsers.length === 0 ? (
+                  <p className="text-slate-500 text-xs px-2 py-1">No one else online</p>
+                ) : (
+                  onlineUsers.map(function(user) {
+                    return (
+                      <Link
+                        key={user.id}
+                        href={'/dm/' + user.id}
+                        onClick={function() { setMobileMenuOpen(false) }}
+                        className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-800 transition-all"
+                      >
+                        <div className="relative flex-shrink-0">
+                          <UserAvatar displayName={user.display_name} avatarColor={user.avatar_color} size="sm" />
+                          <Circle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-green-400 fill-green-400" />
+                        </div>
+                        <span className="text-slate-400 text-sm truncate">
+                          {user.display_name}
+                        </span>
+                      </Link>
+                    )
+                  })
+                )}
+              </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-800 mt-2">
+            <div className="mt-3 pt-3 border-t border-slate-800">
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all"
@@ -264,7 +295,7 @@ export function AppLayout({ profile, children }: AppLayoutProps) {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* MAIN CONTENT */}
       <main className="md:ml-64 pt-16 md:pt-0 min-h-screen">
