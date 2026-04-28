@@ -93,16 +93,18 @@ export function FeedClient({ initialPosts, currentUser }: FeedClientProps) {
             )}
 
             <div className="flex items-center justify-between mt-3 gap-2">
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 {!imageUrl && (
                   <ImageUpload
                     userId={currentUser.id}
                     folder="posts"
                     onUpload={setImageUrl}
-                    compact={false}
+                    compact={true}
                   />
                 )}
-                <p className="hidden sm:block text-xs text-slate-400">Ctrl+Enter to post</p>
+                {!imageUrl && (
+                  <span className="text-xs text-slate-400">Add image</span>
+                )}
               </div>
               <button
                 onClick={handlePost}
@@ -153,11 +155,11 @@ export function FeedClient({ initialPosts, currentUser }: FeedClientProps) {
                     </p>
                   )}
                   {post.image_url && (
-                    <div className="mt-3">
+                    <div className="mt-3 rounded-xl overflow-hidden border border-slate-100">
                       <img
                         src={post.image_url}
                         alt="Post image"
-                        className="max-h-96 w-full object-cover rounded-xl border border-slate-100"
+                        className="w-full h-auto block"
                       />
                     </div>
                   )}
