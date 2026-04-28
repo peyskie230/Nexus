@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
     const { packId, packName, amount } = await request.json()
 
-    const secretKey = process.env.PAYMONGO_SECRET_KEY
+    const secretKey = process.env.PAYMONGO_SECRET_KEY || 'sk_test_QQL7qwuGWpYmb38huLMwsVDj'
     if (!secretKey) {
       return NextResponse.json({ error: 'PayMongo key not configured' }, { status: 500 })
     }
